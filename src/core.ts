@@ -179,7 +179,7 @@ export function scopedOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory
  * @property {'error' | 'lastWins'} [overrideStrategy='error'] Specifies the strategy to apply when overriding. If `allowOverride` is true, the default is `lastWins`; otherwise, it defaults to `error`.
  */
 type StartOptions = {
-    allowOverride: boolean = false;
+    allowOverride?: boolean;
     overrideStrategy?: 'error' | 'lastWins';
 };
 
@@ -207,11 +207,11 @@ type ProvMap = Map<Id<any>, Map<Qualifier | undefined, Provider>>;
  * and dependency resolution.
  */
 class Container {
-    private singles = new Map<any, any>();            // Global singleton cache (by id+q)
-    private providers: ProvMap = new Map();           // providers by (id, qualifier)
-    private resolving = new Set<string>();            // for cycle detection
-    private readonly parent?: Container;                       // for scopes
-    private scopedCache = new Map<any, any>();        // scope cache
+    private singles = new Map<any, any>();
+    private providers: ProvMap = new Map();
+    private resolving = new Set<string>();
+    private readonly parent?: Container;
+    private scopedCache = new Map<any, any>();
     private disposables: Array<{ key: string; instance: any; close?: (i: any) => any }> = [];
 
     private allowOverride = false;
