@@ -7,6 +7,8 @@ who dislike decorators and prefer clean, explicit dependency graphs.
 > project it solves the problem. Therefore, future updates will only be released if I need them or if you request them
 > through an issue or pull request.
 
+[![Coverage Status](https://coveralls.io/repos/github/examples-of-apps/koinish/badge.svg?branch=main)](https://coveralls.io/github/examples-of-apps/koinish?branch=main)
+
 ### 🧠 Philosophy
 
 Koinish takes inspiration from Kotlin’s [Koin](https://insert-koin.io/) but re-imagines it for the JS/TS ecosystem:

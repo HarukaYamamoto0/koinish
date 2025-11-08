@@ -13,6 +13,7 @@ import {
     singleOf,
     startDI,
 } from '../src';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('koinish (no reflect-metadata)', () => {
     beforeEach(() => {
@@ -145,7 +146,11 @@ describe('koinish (no reflect-metadata)', () => {
 
         const m = module(
             singleOf(Db),
-            singleOf(Cache, {onClose: (c) => closed.push(`manual:${c.name}`)}),
+            singleOf(Cache, {
+                onClose: (c) => {
+                    closed.push(`manual:${c.name}`);
+                }
+            })
         );
 
         startDI(m);

@@ -1,34 +1,45 @@
-import {
-    module, singleOf, factoryOf, scopedOf,
-    startDI, inject, beginScope, shutdownDI
-} from '../src';
+import {factoryOf, inject, module, shutdownDI, singleOf, startDI} from '../src';
+import {describe, expect, it} from 'vitest';
 
-class Repo {
-    list() { return ['item1', 'item2']; }
-}
+describe('README examples', () => {
+    it('runs without throwing', async () => {
 
-class Service {
-    constructor(public repo: Repo) {}
-    ping() { return 'pong'; }
-}
+        class Repo {
+            list() {
+                return ['item1', 'item2'];
+            }
+        }
 
-class Controller {
-    constructor(public service: Service) {}
-}
+        class Service {
+            constructor(public repo: Repo) {
+            }
 
-// Declare your module:
-const appModule = module(
-    singleOf(Repo),
-    singleOf(Service, { deps: [Repo] }), // or rely on reflect metadata if available
-    factoryOf(Controller, ({ get }) => new Controller(get(Service))),
-);
+            ping() {
+                return 'pong';
+            }
+        }
 
-// Start DI
-startDI(appModule);
+        class Controller {
+            constructor(public service: Service) {
+            }
+        }
 
-// Retrieve instances
-const controller = inject(Controller);
-console.log(controller.service.ping()); // → "pong"
+        // Declare your module:
+        const appModule = module(
+            singleOf(Repo),
+            singleOf(Service, {deps: [Repo]}), // or rely on reflection metadata if available
+            factoryOf(Controller, ({get}) => new Controller(get(Service))),
+        );
 
-// Gracefully shut down
-await shutdownDI();
+        // Start DI
+        startDI(appModule);
+
+        // Retrieve instances
+        const controller = inject(Controller);
+        console.log(controller.service.ping()); // → "pong"
+
+        // Gracefully shut down
+        await shutdownDI();
+        expect(true).toBe(true);
+    });
+});

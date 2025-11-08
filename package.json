@@ -1,37 +1,28 @@
 {
   "name": "koinish",
   "version": "1.0.0",
-  "description": "A minimalist, Koin-like DI for TypeScript/JavaScript.",
+  "description": "A minimalist, Koin-like DI for TypeScript.",
   "license": "MIT",
-  "type": "module",
   "private": false,
   "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "types": "src/index.ts",
+  "files": ["src", "README.md", "LICENSE"],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.cjs.json",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build",
+    "build": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:cov": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
+    "@vitest/coverage-v8": "^4.0.8",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "reflect-metadata": "^0.1.14"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.14"
   }
 }

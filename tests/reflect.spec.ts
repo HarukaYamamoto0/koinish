@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import {factoryOf, inject, module, modules, resetDI, shutdownDI, singleOf, startDI,} from '../src';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('koinish (with reflect-metadata)', () => {
     beforeEach(() => {
@@ -21,7 +22,7 @@ describe('koinish (with reflect-metadata)', () => {
     }
 
     class Service {
-        // If emitDecoratorMetadata is enabled, Repo type will be in design:paramtypes
+        // If emitDecoratorMetadata is enabled, a Repo type will be in design:paramtypes
         constructor(public repo: Repo) {
         }
 
