@@ -1,45 +1,11 @@
-/**
- * A generic type for representing a class constructor in TypeScript.
- *
- * @template T The type of the instance that the constructor creates.
- */
 export type Ctor<T> = new (...args: any[]) => T;
-
-/**
- * A generic type `id` that serves as an alias for the `Ctor<T>` type.
- * It represents a constructor type that can be used to create or represent specific instances of a type.
- *
- * @template T - The type parameter that specifies the type for which the constructor applies.
- */
 export type Id<T> = Ctor<T>;
-
-/**
- * A TypeScript type that defines the various kinds of scopes used for dependency injection or object creation.
- *
- * The `ScopeKind` type can take one of the following string literal values:
- * - `'single'`: Indicates a single instance shared across all usages.
- * - `'factory'`: Indicates a new instance is created each time it is invoked.
- * - `'scoped'`: Indicates an instance is shared within a specific context or scope.
- */
 export type ScopeKind = 'single' | 'factory' | 'scoped';
-
-/**
- * A type definition for `Qualifier`.
- *
- * The `Qualifier` type is a union type that represents a value, which can either be a string
- * or a symbol. This is typically used for scenarios where qualified identifiers are needed,
- * such as keys in maps or unique tokens for dependency injection or metadata annotations.
- *
- * Example of common usage includes:
- * - Using strings as keys or names for identification.
- * - Using symbols to create unique and immutable keys that avoid naming collisions.
- */
 export type Qualifier = string | symbol;
 
 /**
- * Represents an error thrown when a provider override is detected.
- * This error is specifically used to indicate that there is an attempt to
- * override an existing dependency or provider identified by a unique key.
+ * Custom error class representing an error that occurs when there is
+ * an attempt to override a provider for a specific bean key.
  */
 export class BeanOverrideError extends Error {
     constructor(public key: string) {
@@ -57,29 +23,14 @@ type Factory<T> = (ctx: FactoryCtx) => T | Promise<T>;
 
 type OnClose<T> = (instance: T) => void | Promise<void>;
 
-/**
- * Represents a provider configuration that defines how a dependency can be created, resolved, and managed in a dependency injection system.
- *
- * @template T - The type of the value or instance provided by this configuration.
- *
- * @property {ScopeKind} kind - The scope kind indicating the lifecycle scope of the provider (e.g., singleton, transient).
- * @property {Id<T>} id - A unique identifier used to reference and resolve the provider's value or instance.
- * @property {Qualifier} [qualifier] - An optional qualifier that can be used to distinguish between similarly typed providers.
- * @property {Ctor<T>} [useClass] - A constructor to instantiate a class as the provided value (requires dependencies to be injected).
- * @property {Factory<T>} [useFactory] - A factory function to dynamically create the provided value. Can be synchronous or asynchronous.
- * @property {T} [useValue] - A literal value provided directly by this configuration.
- * @property {Id<any>[]} [deps] - An optional array of dependency identifiers, used to manually define dependencies when reflection metadata is unavailable.
- * @property {OnClose<T>} [onClose] - An optional lifecycle hook invoked for cleanup or resource management when the provider is disposed.
- */
 export type Provider<T = any> = {
     kind: ScopeKind;
     id: Id<T>;
     qualifier?: Qualifier;
 
-    // Three ways to create:
-    useClass?: Ctor<T>;            // new Impl(...deps)
-    useFactory?: Factory<T>;       // (ctx) => instance (sync/async)
-    useValue?: T;                  // literal
+    useClass?: Ctor<T>;
+    useFactory?: Factory<T>;
+    useValue?: T;
 
     // If you don't want reflect-metadata:
     deps?: Id<any>[];
@@ -88,38 +39,27 @@ export type Provider<T = any> = {
     onClose?: OnClose<T>;
 };
 
-/**
- * Represents a Module object that contains an array of providers.
- */
 export type Module = { providers: Provider[] };
 
 /**
- * Represents a function to create a module object with the specified providers.
+ * Creates a Module object containing the provided list of providers.
  *
- * @param {...Provider[]} providers - An array of providers to include in the module.
- * @returns {Module} An object containing the specified providers.
+ * @function module
+ * @param {...Provider} providers - A rest parameter taking one or more Provider objects to be included in the module.
+ * @returns {Module} An object with a provider property containing the array of supplied providers.
  */
 export const module = (...providers: Provider[]): Module => ({providers});
+
 /**
- * Combines multiple modules into a single module by merging their providers.
+ * Combines multiple module definitions into a single module by merging their providers.
  *
- * @param {...Module} mods - The array of modules to be combined.
- * @returns {Module} A new module object containing the combined providers from all input modules.
+ * @param {...Module} mods - An array of module objects to be combined.
+ *                           Each module is expected to have a `providers` property.
+ * @returns {Module} - A new module object containing a consolidated list of providers
+ *                     from all input modules.
  */
 export const modules = (...mods: Module[]): Module => ({providers: mods.flatMap(m => m.providers)});
 
-/**
- * Represents base options for a generic type T configuration.
- *
- * This type is used to define optional properties
- * that can configure the behavior or dependencies of T.
- *
- * @template T - The type for which the options apply.
- *
- * @property {Qualifier} [qualifier] - An optional qualifier to uniquely identify the instance or configuration.
- * @property {Id<any>[]} [deps] - An optional array of dependencies represented as identifiers.
- * @property {OnClose<T>} [onClose] - An optional callback to be invoked when the instance or configuration is closed.
- */
 type BaseOpts<T> = {
     qualifier?: Qualifier;
     deps?: Id<any>[];
@@ -127,11 +67,11 @@ type BaseOpts<T> = {
 };
 
 /**
- * Creates a single provider instance for a given class constructor.
+ * Registers a singleton provider for a given class constructor. The provider can either use a factory or configuration options.
  *
- * @param ctor The class constructor used to identify the provider.
- * @param optsOrFactory Optional configuration object or factory function for the provider.
- * @return A provider object representing a single instance of the given class.
+ * @param ctor The class constructor for which the singleton provider is being registered.
+ * @param optsOrFactory Optional. A factory function that creates an instance of the class or a set of configuration options for the provider.
+ * @return A provider object configured to provide a singleton instance of the given class.
  */
 export function singleOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory<T>): Provider<T> {
     if (typeof optsOrFactory === 'function') {
@@ -141,11 +81,12 @@ export function singleOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory
 }
 
 /**
- * Creates a provider instance for a given constructor, optionally extending behavior with factory or additional options.
+ * Creates a factory `Provider` for the given constructor and additional options or factory function.
  *
- * @param ctor The constructor function for which the provider is being created.
- * @param optsOrFactory Optional parameter which can be base options for the provider or a factory function.
- * @return A provider object configured based on the given constructor and options or factory.
+ * @template T - The type of instance to create
+ * @param {Ctor<T>} ctor - The constructor function for which the factory is created.
+ * @param {BaseOpts<T> | Factory<T>} [optsOrFactory] - Optional factory function or options to configure the provider.
+ * @return {Provider<T>} A factory `Provider` configured with the supplied constructor and options or factory.
  */
 export function factoryOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory<T>): Provider<T> {
     if (typeof optsOrFactory === 'function') {
@@ -155,12 +96,12 @@ export function factoryOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factor
 }
 
 /**
- * Creates a scoped provider based on the given constructor and options or factory function.
+ * Creates a scoped provider for the given constructor with optional configuration or factory.
  *
- * @template T - The type of the instance that the constructor creates.
- * @param {Ctor<T>} ctor - The constructor function to create an instance of the provided type.
- * @param {BaseOpts<T> | Factory<T>} [optsOrFactory] - Optional configuration object or a factory function for creating the instance.
- * @return {Provider<T>} A scoped provider configured with the given constructor, options, or factory function.
+ * @template T - The type of instance to create
+ * @param {Ctor<T>} ctor - The constructor function or class for which the scoped provider is created.
+ * @param {BaseOpts<T> | Factory<T>} [optsOrFactory] - Optional configuration for the scoped provider or a factory function that generates the instance.
+ * @return {Provider<T>} A scoped provider object configured with the specified constructor and optional options or factory.
  */
 export function scopedOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory<T>): Provider<T> {
     if (typeof optsOrFactory === 'function') {
@@ -169,40 +110,13 @@ export function scopedOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory
     return {kind: 'scoped', id: ctor, useClass: ctor, ...optsOrFactory};
 }
 
-/**
- * Type definition for the configuration options when starting a process or mechanism.
- *
- * @property {boolean} [allowOverride=false] Determines whether overriding is permitted. If set to false, an error will occur when a duplicate entry is encountered.
- * @property {'error' | 'lastWins'} [overrideStrategy='error'] Specifies the strategy to apply when overriding. If `allowOverride` is true, the default is `lastWins`; otherwise, it defaults to `error`.
- */
 type StartOptions = {
     allowOverride?: boolean;
     overrideStrategy?: 'error' | 'lastWins';
 };
 
-/**
- * ProvMap is a specialized Map structure designed to map an identifier (`id<any>`)
- * to another Map. The inner Map associates either a `Qualifier` or `undefined` key
- * with a `Provider` value.
- *
- * This type can be used to manage associations between unique identifiers,
- * optional qualifiers, and their respective providers.
- *
- * Structure:
- * - The outer Map uses `id<any>` as the key for identifying unique resources or entities.
- * - The value corresponding to each `id<any>` key is another Map.
- * - The inner Map uses keys that can either be a `Qualifier` or `undefined`, and maps them to a `Provider`.
- *
- * Use Cases:
- * - Managing dependencies in dependency injection frameworks.
- * - Structuring complex relationships between unique IDs, optional qualifiers, and their providers.
- */
 type ProvMap = Map<Id<any>, Map<Qualifier | undefined, Provider>>;
 
-/**
- * A dependency injection container for managing configurable dependency instances, lifecycle management,
- * and dependency resolution.
- */
 class Container {
     private singles = new Map<any, any>();
     private providers: ProvMap = new Map();
@@ -219,7 +133,7 @@ class Container {
         if (opts) this.configure(opts);
     }
 
-    configure(opts: StartOptions) {
+    configure(opts: StartOptions): void {
         this.allowOverride = !!opts.allowOverride;
         this.overrideStrategy = opts.overrideStrategy ?? (this.allowOverride ? 'lastWins' : 'error');
     }
@@ -411,11 +325,10 @@ async function tryAutoDispose(obj: any) {
 let _container = new Container();
 
 /**
- * Initializes the dependency injection container with the provided modules and options.
+ * Starts the Dependency Injection (DI) container with the provided modules or options.
  *
- * @param {...(Module|StartOptions)[]} modsOrOpts - An array of modules and/or options.
- * Modules are objects containing providers, while options configure the container.
- * @return {void} Does not return a value.
+ * @param {...(Module|StartOptions)[]} modsOrOpts - A list of Modules or StartOptions. Modules are used to define providers, and StartOptions allow additional configuration.
+ * @return {void} No return value.
  */
 export function startDI(...modsOrOpts: (Module | StartOptions)[]): void {
     const mods: Module[] = [];
@@ -428,16 +341,21 @@ export function startDI(...modsOrOpts: (Module | StartOptions)[]): void {
     _container.load(modules(...mods));
 }
 
+export type Scope = {
+    get<U>(id: Id<U>, q?: Qualifier): U;
+    getAsync<U>(id: Id<U>, q?: Qualifier): Promise<U>;
+    end(): Promise<void>;
+};
+
 /**
- * Creates and begins a new scope within the dependency injection container, allowing encapsulated dependency resolution.
- * The scope provides methods to retrieve dependencies synchronously or asynchronously and to properly clean up resources when done.
+ * Initiates a new scope that provides controlled lifecycle management for dependency resolution.
+ * This method creates a scoped environment where dependencies can be resolved and managed.
+ * The returned scope provides methods to retrieve objects synchronously, retrieve them asynchronously,
+ * and terminate the scope when it's no longer necessary.
  *
- * @return {Object} An object containing the following methods:
- * - `get(id, q)`: Resolves a dependency synchronously within the scope.
- * - `getAsync(id, q)`: Resolves a dependency asynchronously within the scope.
- * - `end()`: Ends the scope and releases any resources associated with it.
+ * @return {Scope} An object representing the newly created scope, with methods to retrieve dependencies and end the scope.
  */
-export function beginScope(): object {
+export function beginScope(): Scope {
     const scope = _container.beginScope();
     return {
         get: <T>(id: Id<T>, q?: Qualifier) => scope.get(id, q),
@@ -447,22 +365,23 @@ export function beginScope(): object {
 }
 
 /**
- * Retrieves an instance of a registered type from the dependency injection container.
+ * Retrieves an instance of the specified type from the dependency injection container.
  *
- * @param id The unique identifier of the type to retrieve.
- * @param q An optional qualifier to further distinguish the specific instance to retrieve.
- * @return The retrieved instance of the requested type.
+ * @template T - The type of instance to create
+ * @param {Id<T>} id - The identifier used to locate and retrieve the instance from the container.
+ * @param {Qualifier} [q] - An optional qualifier to further specify the desired instance.
+ * @return {T} The instance of the specified type retrieved from the container.
  */
 export function inject<T>(id: Id<T>, q?: Qualifier): T {
     return _container.get(id, q);
 }
 
 /**
- * Asynchronously retrieves an instance of the specified type associated with the given identifier and optional qualifier.
+ * Asynchronously retrieves an instance of the specified type from the container.
  *
- * @template T - The type of the instance that the constructor creates.
- * @param {Id<T>} id - The identifier representing the type of the instance to resolve.
- * @param {Qualifier} [q] - An optional qualifier to distinguish between multiple bindings of the same type.
+ * @template T - The type of instance to create
+ * @param {Id<T>} id The identifier for the type of instance to retrieve.
+ * @param {Qualifier} [q] An optional qualifier to distinguish between different instances of the same type.
  * @return {Promise<T>} A promise that resolves to the requested instance of the specified type.
  */
 export function injectAsync<T>(id: Id<T>, q?: Qualifier): Promise<T> {
@@ -470,33 +389,35 @@ export function injectAsync<T>(id: Id<T>, q?: Qualifier): Promise<T> {
 }
 
 /**
- * Overrides the binding of a specific identifier in the container with the given value.
+ * Overrides the value associated with the provided identifier in the container.
  *
- * @template T - The type of the instance that the constructor creates.
- * @param {Id<T>} id - The identifier to override.
- * @param {T} value - The new value to bind to the given identifier.
- * @param {Qualifier} [q] - An optional qualifier to apply to the override.
- * @return {void} This method does not return a value.
+ * @template T - The type of instance to create
+ * @param {Id<T>} id - The identifier for the value to be overridden.
+ * @param {T} value - The new value to associate with the identifier.
+ * @param {Qualifier} [q] - An optional qualifier to distinguish between multiple bindings for the same identifier.
+ * @return {void}
  */
 export function override<T>(id: Id<T>, value: T, q?: Qualifier): void {
     _container.override(id, value, q);
 }
 
 /**
- * Shuts down the Dependency Injection (DI) container by invoking its shutdown procedure.
- * Ensures that all resources managed by the DI container are properly released.
+ * Shuts down the dependency injection container.
+ * Cleans up resources and finalizes any asynchronous operations within
+ * the dependency injection system.
  *
- * @return {Promise<void>} A promise that resolves once the DI container has been successfully shut down.
+ * @return {Promise<void>} A promise that resolves when the shutdown process is complete.
  */
 export async function shutdownDI(): Promise<void> {
     await _container.shutdown();
 }
 
 /**
- * Resets the dependency injection (DI) container to its initial state.
- * This will clear any previously registered dependencies or configurations within the container.
+ * Resets the DI (Dependency Injection) container to its initial state.
+ * This method clears all registered dependencies and configurations,
+ * preparing the container for a fresh setup.
  *
- * @return {void} Does not return a value.
+ * @return {void} This method does not return any value.
  */
 export function resetDI(): void {
     _container.reset();
