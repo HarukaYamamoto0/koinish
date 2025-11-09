@@ -6,7 +6,7 @@
 export type Ctor<T> = new (...args: any[]) => T;
 
 /**
- * A generic type `Id` that serves as an alias for the `Ctor<T>` type.
+ * A generic type `id` that serves as an alias for the `Ctor<T>` type.
  * It represents a constructor type that can be used to create or represent specific instances of a type.
  *
  * @template T - The type parameter that specifies the type for which the constructor applies.
@@ -26,7 +26,7 @@ export type ScopeKind = 'single' | 'factory' | 'scoped';
 /**
  * A type definition for `Qualifier`.
  *
- * The `Qualifier` type is a union type that represents a value which can either be a string
+ * The `Qualifier` type is a union type that represents a value, which can either be a string
  * or a symbol. This is typically used for scenarios where qualified identifiers are needed,
  * such as keys in maps or unique tokens for dependency injection or metadata annotations.
  *
@@ -37,7 +37,7 @@ export type ScopeKind = 'single' | 'factory' | 'scoped';
 export type Qualifier = string | symbol;
 
 /**
- * Represents an error that is thrown when a provider override is detected.
+ * Represents an error thrown when a provider override is detected.
  * This error is specifically used to indicate that there is an attempt to
  * override an existing dependency or provider identified by a unique key.
  */
@@ -90,9 +90,6 @@ export type Provider<T = any> = {
 
 /**
  * Represents a Module object that contains an array of providers.
- *
- * @typedef {Object} Module
- * @property {Provider[]} providers - An array of providers associated with the module.
  */
 export type Module = { providers: Provider[] };
 
@@ -160,6 +157,7 @@ export function factoryOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factor
 /**
  * Creates a scoped provider based on the given constructor and options or factory function.
  *
+ * @template T - The type of the instance that the constructor creates.
  * @param {Ctor<T>} ctor - The constructor function to create an instance of the provided type.
  * @param {BaseOpts<T> | Factory<T>} [optsOrFactory] - Optional configuration object or a factory function for creating the instance.
  * @return {Provider<T>} A scoped provider configured with the given constructor, options, or factory function.
@@ -174,7 +172,6 @@ export function scopedOf<T>(ctor: Ctor<T>, optsOrFactory?: BaseOpts<T> | Factory
 /**
  * Type definition for the configuration options when starting a process or mechanism.
  *
- * @typedef {Object} StartOptions
  * @property {boolean} [allowOverride=false] Determines whether overriding is permitted. If set to false, an error will occur when a duplicate entry is encountered.
  * @property {'error' | 'lastWins'} [overrideStrategy='error'] Specifies the strategy to apply when overriding. If `allowOverride` is true, the default is `lastWins`; otherwise, it defaults to `error`.
  */
@@ -184,7 +181,7 @@ type StartOptions = {
 };
 
 /**
- * ProvMap is a specialized Map structure designed to map an identifier (`Id<any>`)
+ * ProvMap is a specialized Map structure designed to map an identifier (`id<any>`)
  * to another Map. The inner Map associates either a `Qualifier` or `undefined` key
  * with a `Provider` value.
  *
@@ -192,8 +189,8 @@ type StartOptions = {
  * optional qualifiers, and their respective providers.
  *
  * Structure:
- * - The outer Map uses `Id<any>` as the key for identifying unique resources or entities.
- * - The value corresponding to each `Id<any>` key is another Map.
+ * - The outer Map uses `id<any>` as the key for identifying unique resources or entities.
+ * - The value corresponding to each `id<any>` key is another Map.
  * - The inner Map uses keys that can either be a `Qualifier` or `undefined`, and maps them to a `Provider`.
  *
  * Use Cases:
@@ -420,7 +417,7 @@ let _container = new Container();
  * Modules are objects containing providers, while options configure the container.
  * @return {void} Does not return a value.
  */
-export function startDI(...modsOrOpts: (Module | StartOptions)[]) {
+export function startDI(...modsOrOpts: (Module | StartOptions)[]): void {
     const mods: Module[] = [];
     let opts: StartOptions | undefined;
     for (const m of modsOrOpts) {
@@ -440,7 +437,7 @@ export function startDI(...modsOrOpts: (Module | StartOptions)[]) {
  * - `getAsync(id, q)`: Resolves a dependency asynchronously within the scope.
  * - `end()`: Ends the scope and releases any resources associated with it.
  */
-export function beginScope() {
+export function beginScope(): object {
     const scope = _container.beginScope();
     return {
         get: <T>(id: Id<T>, q?: Qualifier) => scope.get(id, q),
@@ -463,6 +460,7 @@ export function inject<T>(id: Id<T>, q?: Qualifier): T {
 /**
  * Asynchronously retrieves an instance of the specified type associated with the given identifier and optional qualifier.
  *
+ * @template T - The type of the instance that the constructor creates.
  * @param {Id<T>} id - The identifier representing the type of the instance to resolve.
  * @param {Qualifier} [q] - An optional qualifier to distinguish between multiple bindings of the same type.
  * @return {Promise<T>} A promise that resolves to the requested instance of the specified type.
@@ -474,12 +472,13 @@ export function injectAsync<T>(id: Id<T>, q?: Qualifier): Promise<T> {
 /**
  * Overrides the binding of a specific identifier in the container with the given value.
  *
+ * @template T - The type of the instance that the constructor creates.
  * @param {Id<T>} id - The identifier to override.
  * @param {T} value - The new value to bind to the given identifier.
  * @param {Qualifier} [q] - An optional qualifier to apply to the override.
  * @return {void} This method does not return a value.
  */
-export function override<T>(id: Id<T>, value: T, q?: Qualifier) {
+export function override<T>(id: Id<T>, value: T, q?: Qualifier): void {
     _container.override(id, value, q);
 }
 
@@ -489,7 +488,7 @@ export function override<T>(id: Id<T>, value: T, q?: Qualifier) {
  *
  * @return {Promise<void>} A promise that resolves once the DI container has been successfully shut down.
  */
-export async function shutdownDI() {
+export async function shutdownDI(): Promise<void> {
     await _container.shutdown();
 }
 
@@ -499,6 +498,6 @@ export async function shutdownDI() {
  *
  * @return {void} Does not return a value.
  */
-export function resetDI() {
+export function resetDI(): void {
     _container.reset();
 }
