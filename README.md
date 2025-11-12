@@ -3,9 +3,9 @@
 A minimalist, **Koin-like Dependency Injection (DI)** library for **TypeScript / JavaScript** — designed for developers
 who dislike decorators and prefer clean, explicit dependency graphs.
 
-> ⚠️ It's important to remember that this package was created out of a personal need, and up to this point in the
-> project it solves the problem. Therefore, future updates will only be released if I need them or if you request them
-> through an issue or pull request.
+> ⚠️⚠️ Hmm, the package was interesting, but unfortunately TypeScript has limitations regarding
+> typing because it doesn't exist at runtime, so it doesn't allow for the full use of the idea.
+> So I'll stop here. portanto vou parar por aqui. ⚠️⚠️
 
 [![Coverage Status](https://coveralls.io/repos/github/HarukaYamamoto0/koinish/badge.svg?branch=main)](https://coveralls.io/github/HarukaYamamoto0/koinish?branch=main)
 
