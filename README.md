@@ -5,7 +5,7 @@ who dislike decorators and prefer clean, explicit dependency graphs.
 
 > ⚠️⚠️ Hmm, the package was interesting, but unfortunately TypeScript has limitations regarding
 > typing because it doesn't exist at runtime, so it doesn't allow for the full use of the idea.
-> So I'll stop here. portanto vou parar por aqui. ⚠️⚠️
+> So I'll stop here. So I'll stop here. ⚠️⚠️
 
 [![Coverage Status](https://coveralls.io/repos/github/HarukaYamamoto0/koinish/badge.svg?branch=main)](https://coveralls.io/github/HarukaYamamoto0/koinish?branch=main)
 
